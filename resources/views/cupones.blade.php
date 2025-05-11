@@ -1,5 +1,5 @@
 @include('partials.navbar')
-
+<link href="{{ asset('css/cupones_pendientes.css') }}" rel="stylesheet">
 <!-- Toast de Mensajes Simplificado -->
 <div class="position-fixed top-0 end-0 p-3" style="z-index: 9999">
     <div id="statusToast" class="toast align-items-center text-bg-success border-0" role="alert" aria-live="assertive" aria-atomic="true">
@@ -11,7 +11,9 @@
 </div>
 
 <div class="container">
+    <br>
     <h1>{{ $titulo }}</h1>
+    <br>
 
     @if(isset($mostrarFormulario) && $mostrarFormulario)
         <!-- Formulario de edición -->
@@ -66,7 +68,7 @@
                 No hay cupones pendientes de aprobación.
             </div>
         @else
-            <div class="table-responsive">
+            <div class="table-responsive text-white">
                 <table class="table table-striped">
                     <thead class="table-dark">
                         <tr>
@@ -113,3 +115,4 @@
         @endif
     });
 </script>
+

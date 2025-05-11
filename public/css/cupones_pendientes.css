@@ -1,0 +1,20 @@
+/* Versión con mayor especificidad */
+div.container div.table-responsive.text-white {
+    background-color:  #2e79ea !important;
+    border-radius: 8px !important;
+}
+
+div.container div.table-responsive.text-white table.table {
+    background-color: transparent !important;
+    color: white !important;
+}
+
+div.container div.table-responsive.text-white table.table thead.table-dark tr th {
+    background-color: #2464c3 !important;
+    color: white !important;
+}
+
+.card{
+    background-color: #2464c3 !important;
+    color: white !important;
+}
