@@ -4,24 +4,32 @@ namespace App\Http\Controllers;
 
 use App\Models\ClienteModel;
 use App\Models\VentaModel;
-use Carbon\Carbon;
+use Carbon\Carbon; // manejo de fechas
+use Illuminate\Http\Request;
 
 class ClienteController extends Controller
 {
     // lista de clientes
-
-    public function index()
+    public function index(Request $request)
     {
-        $clientes = ClienteModel::select([
+        $search = $request->input('search'); //obtiene lo que se queire buscar de vista
+
+        $query = ClienteModel::select([
             'ID_Cliente',
             'Nombre',
             'Apellido',
             'Telefono',
             'Correo',
             'Direccion'
-        ])->orderBy('Nombre')->get();
+        ]);
 
-        return view('clientes', compact('clientes'));
+        // Filtro por nombre
+        if ($search) {                                             
+            $query->where('Nombre', 'like', "%$search%");  //% permite buscar relacion en cualquier parte del nombre
+        }
+        $clientes = $query->orderBy('Nombre')->get();//ejecuta consulta
+
+        return view('clientes', compact('clientes', 'search'));//envia datos
     }
 
 

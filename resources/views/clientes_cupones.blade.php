@@ -4,9 +4,9 @@
 
 <div class="container py-4">
     <div class="d-flex flex-column justify-content-between align-items-start mb-4">
-        <a href="{{ route('clientes') }}" class="btn btn-secondary py-1 px-2">
+        <a href="{{ route('clientes') }}" class="btn btn-outline-secondary">
             <i class="fas fa-arrow-left me-2"></i> Volver
-        </a>
+        </a><br>
         <h1>Cupones de {{ $cliente->NombreCompleto }}</h1>
     </div>
 
