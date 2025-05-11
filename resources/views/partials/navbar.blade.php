@@ -37,7 +37,7 @@
                     </li>
 
                     <li class="nav-item">
-                        <a class="nav-link text-white" href="">
+                        <a class="nav-link text-white" href="{{ route('cupones.pendientes') }}">
                             <i class="fas fa-ticket-alt"></i> Cupones
                         </a>
                     </li>
@@ -47,7 +47,7 @@
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link text-white" href="">
+                        <a class="nav-link text-white" href="{{ url('/rubros') }}">
                             <i class="fa fa-plus-square"></i> Rubros
                         </a>
                     </li>
