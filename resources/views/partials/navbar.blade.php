@@ -42,12 +42,12 @@
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link text-white" href="">
+                        <a class="nav-link text-white" href="{{ route('clientes') }}">
                             <i class="fa fa-user-circle"></i> Clientes
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link text-white" href="{{ url('/rubros') }}">
+                        <a class="nav-link text-white" href="{{ url('rubros') }}">
                             <i class="fa fa-plus-square"></i> Rubros
                         </a>
                     </li>

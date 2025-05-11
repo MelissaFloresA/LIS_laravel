@@ -1,8 +1,9 @@
 <?php
 
-use App\Http\Controllers\RubrosController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\RubrosController;
 use App\Http\Controllers\CuponesController;
+use App\Http\Controllers\ClienteController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -18,3 +19,7 @@ Route::get('/rubros', [RubrosController::class, 'index'])->name('rubros.index');
 Route::post('/rubros/crear', [RubrosController::class, 'store'])->name('rubros.store');
 Route::put('/rubros/actualizar/{id}', [RubrosController::class, 'update'])->name('rubros.update');
 Route::delete('/rubros/eliminar/{id}', [RubrosController::class, 'destroy'])->name('rubros.destroy');
+
+//Rutas para cliente
+Route::get('/clientes', [ClienteController::class, 'index'])->name('clientes');
+Route::get('/clientes/{id}/cupones', [ClienteController::class, 'showCupones'])->name('clientes_cupones');
