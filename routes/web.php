@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\RubrosController;
 use App\Http\Controllers\CuponesController;
 use App\Http\Controllers\ClienteController;
+use App\Http\Controllers\CuponAgregarController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -23,3 +24,8 @@ Route::delete('/rubros/eliminar/{id}', [RubrosController::class, 'destroy'])->na
 //Rutas para cliente
 Route::get('/clientes', [ClienteController::class, 'index'])->name('clientes');
 Route::get('/clientes/{id}/cupones', [ClienteController::class, 'showCupones'])->name('clientes_cupones');
+
+
+//Ruta para agregar cupones--ACCESO DESDE ADMINISTRADOR DE EMPRESA EXTERNA
+Route::match(['get', 'post'], '/cupones/crear', [CuponAgregarController::class, 'crear'])->name('cupones.crear');
+

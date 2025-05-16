@@ -26,6 +26,8 @@ class CuponesModel extends Model
         'Estado_Cupon',
         'Justificacion'
     ];
+
+    //-----------PARA LISTAR LOS CUPONES PARA APROBAR----------//
     //manejo de estamos de cupones
     const ESTADOS_APROBACION = [
         'EN_ESPERA' => 'En espera',
@@ -43,6 +45,8 @@ class CuponesModel extends Model
     {
         return $query->where('Estado_Aprobacion', 'En espera');
     }
+
+    //------------------------------------------------------------------//
 
 
 }//fin clase CuponesModel
