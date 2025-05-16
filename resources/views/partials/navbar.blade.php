@@ -15,6 +15,7 @@
     <link rel="icon" href="../resources/icionito.ico" type="image/png">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <link href="{{ asset('css/stylemenu.css') }}" rel="stylesheet">
 
 </head>
 
@@ -30,11 +31,30 @@
             </button>
             <div class="collapse navbar-collapse text-white" id="navbar">
                 <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
-                    <li class="nav-item ">
-                        <a class="nav-link text-white" href="">
-                            <i class="fa fa-users"></i> Empresas
+                    
+                        
+                          <li class="nav-item dropdown" >
+                        <a class="nav-link dropdown-toggle text-white " href=" {{ route('empresa.index')}}" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fa fa-users"></i> Empresas
                         </a>
-                    </li>
+                         <ul class="dropdown-menu dropdown-menu-end " style="background-color:#173c74 ">
+                          <li>
+                          <a class="dropdown-item text-white  m-0 " href="{{ route('empresa.index') }}">
+                            Añadir Empresa
+                          </a>
+                             </li>
+                             <li>
+                          <a class="dropdown-item text-white  m-0 " href="{{ route('empresa.filtrar') }}">
+                            Filtrar Empresas
+                          </a>
+                             </li>
+
+                            </ul>
+                           
+                              </li>
+
+
+               
 
                     <li class="nav-item">
                         <a class="nav-link text-white" href="{{ route('cupones.pendientes') }}">

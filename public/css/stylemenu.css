@@ -1,0 +1,4 @@
+.dropdown-menu .dropdown-item:hover {
+            background-color: inherit !important;
+            color: white !important;
+        }

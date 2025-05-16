@@ -5,6 +5,8 @@ use App\Http\Controllers\RubrosController;
 use App\Http\Controllers\CuponesController;
 use App\Http\Controllers\ClienteController;
 use App\Http\Controllers\CuponAgregarController;
+use App\Http\Controllers\EmpresaController;
+
 
 Route::get('/', function () {
     return view('welcome');
@@ -26,6 +28,15 @@ Route::get('/clientes', [ClienteController::class, 'index'])->name('clientes');
 Route::get('/clientes/{id}/cupones', [ClienteController::class, 'showCupones'])->name('clientes_cupones');
 
 
+
 //Ruta para agregar cupones--ACCESO DESDE ADMINISTRADOR DE EMPRESA EXTERNA
 Route::match(['get', 'post'], '/cupones/crear', [CuponAgregarController::class, 'crear'])->name('cupones.crear');
+
+//Rutas para empresa
+Route::get('/empresa', [EmpresaController::class, 'index'])->name('empresa.index');
+Route::post('/empresa/crear', [EmpresaController::class, 'store'])->name('empresa.store');
+Route::put('/empresa/actualizar/{id}', [EmpresaController::class, 'update'])->name('empresa.update');
+Route::delete('/empresa/eliminar/{id}', [EmpresaController::class, 'destroy'])->name('empresa.destroy');
+Route::get('/empresa/filtrar', [CuponesController::class, 'filtrarPorEmpresa'])->name('empresa.filtrar');
+
 

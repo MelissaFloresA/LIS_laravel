@@ -6,6 +6,7 @@ use App\Models\RubrosModel;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
+
 class RubrosController extends Controller
 {
     public function index()
