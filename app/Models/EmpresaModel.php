@@ -12,7 +12,7 @@ class EmpresaModel extends Model
     protected $primaryKey = 'ID_Empresa';
      public $timestamps = false;
      protected $keyType = 'string';
-       public $incrementing = false;
+       public $incrementing = true;
 
      protected $fillable = [
          'ID_Empresa',
@@ -31,9 +31,7 @@ class EmpresaModel extends Model
      {
          return [
                 'ID_Empresa' => [
-                    'required',
-                    
-                    'exists:empresa,ID_Empresa'
+                   
                 ],
              'Nombre' => [
                  'required',
@@ -81,7 +79,10 @@ public function routeNotificationForMail()
 {
     return $this->Correo;
 }
-
+public function representantes()
+{
+    return $this->hasMany(RepresentantesModel::class, 'ID_Empresa', 'ID_Empresa');
+}
 
 
 }

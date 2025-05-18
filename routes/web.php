@@ -6,6 +6,7 @@ use App\Http\Controllers\CuponesController;
 use App\Http\Controllers\ClienteController;
 use App\Http\Controllers\CuponAgregarController;
 use App\Http\Controllers\EmpresaController;
+use App\Http\Controllers\VerificacionController;
 
 
 Route::get('/', function () {
@@ -40,3 +41,5 @@ Route::delete('/empresa/eliminar/{id}', [EmpresaController::class, 'destroy'])->
 Route::get('/empresa/filtrar', [CuponesController::class, 'filtrarPorEmpresa'])->name('empresa.filtrar');
 
 
+//ruta para verificar cuenta de representante de empresa
+Route::get('/verificar-cuenta/{id}', [VerificacionController::class, 'verificar'])->name('verificar.cuenta');

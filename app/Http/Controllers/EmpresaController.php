@@ -2,11 +2,15 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 use App\Models\EmpresaModel;
 use App\Models\RubrosModel;
 use Illuminate\Support\Str;
 use App\Notifications\EnviarCredencialesEmpresa;
+use App\Models\RepresentantesModel;
+use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Hash;
 
 
 
@@ -17,79 +21,163 @@ class EmpresaController extends Controller
     {
         $empresas = EmpresaModel::all();
         $rubros = RubrosModel::all();
+        $representantes = RepresentantesModel::all();
          $titulo = 'Gestión de Empresas';
-        return view('empresa', compact('empresas', 'rubros','titulo'));
+        return view('empresa', compact('empresas', 'rubros','titulo','representantes'));
     }
 
     //crear
-    public function store(Request $request)
-    {
-        $password = Str::random(8); // genera una contraseña aleatoria de 8 caracteres
+       public function store(Request $request)
+{
+    $password = Str::random(8);
 
-        // Validaciones
-        $request->validate([
-            'ID_Empresa' => 'required|string|max:6|unique:empresa,ID_Empresa',
-            'Nombre' => 'required|string|max:100|regex:/^[A-Za-záéíóúÁÉÍÓÚñÑ\s]+$/',
-            'Direccion' => 'required|string|max:100',
-            'Nombre_Contacto' => 'required|string|max:100|regex:/^[A-Za-záéíóúÁÉÍÓÚñÑ\s]+$/',
-            'Telefono' => 'required|string|max:100',
-            'Correo' => 'required|email|max:100',
-            'ID_Rubro' => 'required|exists:rubros,ID_Rubro',
-            'Porcentaje' => 'required|numeric|min:0|max:100',
-        ]);
+    $request->validate([
+        'Nombre' => 'required|string|max:100|regex:/^[A-Za-záéíóúÁÉÍÓÚñÑ\s]+$/',
+        'Direccion' => 'required|string|max:100|regex:/^[A-Za-z0-9áéíóúÁÉÍÓÚñÑ\s.,#\-º°\/()]+$/',
+        'Nombre_Contacto' => 'required|string|max:100|regex:/^[A-Za-záéíóúÁÉÍÓÚñÑ\s]+$/',
+        'Telefono' => 'required|string|max:100',
+        'Correo' => 'required|email|max:100',
+        'ID_Rubro' => 'required|exists:rubros,ID_Rubro',
+        'Porcentaje' => 'required|numeric|min:0|max:100',
+    ]);
 
-        // Crear nueva empresa
-        $empresa = new EmpresaModel();
-        $empresa->ID_Empresa = $request->input('ID_Empresa');
-        $empresa->Nombre = $request->input('Nombre');
-        $empresa->Direccion = $request->input('Direccion');
-        $empresa->Nombre_Contacto = $request->input('Nombre_Contacto');
-        $empresa->Telefono = $request->input('Telefono');
-        $empresa->Correo = $request->input('Correo');
-        $empresa->ID_Rubro = $request->input('ID_Rubro');
-        $empresa->Porcentaje_Comision = $request->input('Porcentaje');
+    // Verificar si ya existe un representante con ese correo
+    $yaExiste = RepresentantesModel::where('Correo', $request->Correo)->exists();
 
-        if ($empresa->save()) {
-          
-     $empresa->notify(new \App\Notifications\EnviarCredencialesEmpresa($password));
-
-            return redirect()->route('empresa.index')->with('success', 'Empresa creada exitosamente.');
-            
-        } else {
-            return redirect()->back()->with('error', 'Error al crear la empresa.');
-        }
+    if ($yaExiste) {
+        return back()->withInput()->with('error', 'El correo del representante ya existe. Usa otro correo.');
     }
+
+    try {
+      DB::table('empresa')->insert([
+    'Nombre' => $request->Nombre,
+    'Direccion' => $request->Direccion,
+    'Nombre_Contacto' => $request->Nombre_Contacto,
+    'Telefono' => $request->Telefono,
+    'Correo' => $request->Correo,
+    'ID_Rubro' => $request->ID_Rubro,
+    'Porcentaje_Comision' => $request->Porcentaje,
+]);
+
+// Recuperar la empresa recién creada
+$empresa = DB::table('empresa')
+    ->where('Correo', $request->Correo)
+    ->orderBy('ID_Empresa', 'desc') 
+    ->first();
+
+$idEmpresa = $empresa->ID_Empresa;
+
+// Luego insertar representante con ese id
+DB::insert("INSERT INTO representantes 
+   (ID_Empresa, Nombre, Correo, Contraseña, Estado) 
+   VALUES (?, ?, ?, ?, ?)", 
+   [
+       $idEmpresa,
+       $request->Nombre_Contacto,
+       $request->Correo,
+       Hash::make($password),
+       1
+   ]);
+
+        //enviar correo
+        $representante = RepresentantesModel::where('Correo', $request->Correo)->first();
+        $representante->notify(new EnviarCredencialesEmpresa($password));
+
+        DB::commit();
+
+        return redirect()->route('empresa.index')->with('success', 'Empresa y representante creados exitosamente');
+
+    } catch (\Exception $e) {
+        DB::rollBack();
+        \Log::error("Error en creación de empresa/representante: ".$e->getMessage());
+        return back()->withInput()->with('error', 'Error al crear registros: '.$e->getMessage());
+    }
+}
     //editar
-    public function update(Request $request, $id){
+       public function update(Request $request, $id)
+{
+    $request->validate([
+        'Nombre' => 'required|string|max:100|regex:/^[A-Za-záéíóúÁÉÍÓÚñÑ\s]+$/',
+        'Direccion' => 'required|string|max:100|regex:/^[A-Za-z0-9áéíóúÁÉÍÓÚñÑ\s.,#\-º°\/()]+$/',
+        'Nombre_Contacto' => 'required|string|max:100|regex:/^[A-Za-záéíóúÁÉÍÓÚñÑ\s]+$/',
+        'Telefono' => 'required|string|max:100',
+        'Correo' => 'required|email|max:100',
+        'ID_Rubro' => 'required|exists:rubros,ID_Rubro',
+        'Porcentaje' => 'required|numeric|min:0|max:100',
+    ]);
 
-        $empresa = EmpresaModel::findOrFail($id);
-        $request->validate([
-            'ID_Empresa' => 'required|string|max:6|unique:empresa,ID_Empresa,' . $empresa->ID_Empresa . ',ID_Empresa',
-            'Nombre' => 'required|string|max:100|regex:/^[A-Za-záéíóúÁÉÍÓÚñÑ\s]+$/',
-            'Direccion' => 'required|string|max:100|regex:/^[A-Za-z0-9áéíóúÁÉÍÓÚñÑ\s.,#\-º°\/()]+$/',
+    DB::beginTransaction();
 
-            'Nombre_Contacto' => 'required|string|max:100|regex:/^[A-Za-záéíóúÁÉÍÓÚñÑ\s]+$/',
-            'Telefono' => 'required|string|max:100',
-            'Correo' => 'required|email|max:100',
-            'ID_Rubro' => 'required|exists:rubros,ID_Rubro',
-            'Porcentaje' => 'required|numeric|min:0|max:100',
-        ]);
+    try {
         
-        $empresa->fill($request->except('Porcentaje')); // llena lo demás
-$empresa->Porcentaje_Comision = $request->Porcentaje;
-$empresa->save();
+        $empresa = EmpresaModel::findOrFail($id);
 
-        return redirect()->route('empresa.index')->with('success', 'Empresa actualizada exitosamente.');
+        // Guardar valores antiguos para comparar correo representante
+        $correoAntiguo = $empresa->Correo;
+
+        // Actualizar datos de empresa
+        $empresa->Nombre = $request->Nombre;
+        $empresa->Direccion = $request->Direccion;
+        $empresa->Nombre_Contacto = $request->Nombre_Contacto;
+        $empresa->Telefono = $request->Telefono;
+        $empresa->Correo = $request->Correo;
+        $empresa->ID_Rubro = $request->ID_Rubro;
+        $empresa->Porcentaje_Comision = $request->Porcentaje;
+        $empresa->save();
+
+        // Obtener representante relacionado a esta empresa
+        $representante = RepresentantesModel::where('ID_Empresa', $id)->first();
+
+        if (!$representante) {
+            throw new \Exception("Representante no encontrado para la empresa $id");
+        }
+
+        // Verificar si el correo cambió
+        if ($correoAntiguo !== $request->Correo) {
+           
+            // Generar nueva contraseña
+            $nuevaPassword = Str::random(8);
+
+            $representante->Correo = $request->Correo;
+            $representante->Nombre = $request->Nombre_Contacto;
+            $representante->Estado = 1; // reactivar representante
+            $representante->Contraseña = Hash::make($nuevaPassword);
+            $representante->save();
+
+            // Enviar correo con la nueva contraseña
+            $representante->notify(new EnviarCredencialesEmpresa($nuevaPassword));
+        } else {
+            // Solo actualizar nombre contacto 
+            $representante->Nombre = $request->Nombre_Contacto;
+            $representante->save();
+        }
+
+        DB::commit();
+
+        return redirect()->route('empresa.index')->with('success', 'Empresa y representante actualizados correctamente');
+    } catch (\Exception $e) {
+        DB::rollBack();
+
+        \Log::error("Error al actualizar empresa y representante: " . $e->getMessage());
+        return back()->withInput()->with('error', 'Error al actualizar: ' . $e->getMessage());
     }
+}
+
 
     //eliminar
-    public function destroy($id)
-    {
-        $empresa = EmpresaModel::findOrFail($id);
-        $empresa->delete();
+  
 
-        return redirect()->route('empresa.index')->with('success', 'Empresa eliminada exitosamente.');
-    }
-   
+public function destroy($id)
+{
+    $empresa = EmpresaModel::findOrFail($id);
+
+    // Asegúrate que el ID sea exactamente igual
+    RepresentantesModel::where('ID_Empresa', $id)->delete();
+
+    $empresa->delete();
+
+    return redirect()->route('empresa.index')->with('success', 'Empresa y sus representantes eliminados.');
+}
+
    
 }

@@ -25,20 +25,7 @@
 <input type="hidden" id="formMethod" name="_method" value="POST">
                 <div class="form-group mb-3">
                     <h2>Crear Empresa</h2>
-                    {{--ID DE EMPRESA--}}
-                    <label for="ID_Empresa" class="form-label">ID Empresa *</label>
-              <input type="text" class="form-control" id="ID_Empresa" name="ID_Empresa" required
-                  value="{{ old('ID_Empresa') }}" maxlength="6">
-                @error('ID_Empresa')
-                <div class="text-danger">{{ $message }}
-                    @if($message == 'validation.regex')
-                        El ID de la empresa solo puede contener letras y números
-                    @else
-                        {{ $message }}
-                    @endif
-                </div>
-               @enderror
-  <div id="idError" class="text-white" style="display: none;"></div>
+                    
 
                     {{-- Nombre --}}
                     <label for="Nombre" class="form-label">Nombre de la empresa *</label>
@@ -249,7 +236,7 @@
 
 
     // Obtener contenedores de errores
-    const idError = document.getElementById('idError');
+   // const idError = document.getElementById('idError');
     const nombreError = document.getElementById('nombreError');
     const direccionError = document.getElementById('direccionError');
     const nombreContactoError = document.getElementById('nombreContactoError');
@@ -259,7 +246,7 @@
 
     
     // Validación de campos
-    idEmpresa.addEventListener('input', function () {
+  /*  idEmpresa.addEventListener('input', function () {
         const regex = /^[A-Z]{3}[0-9]{3}$/;
         if (!regex.test(idEmpresa.value)) {
             idError.style.display = 'block';
@@ -268,7 +255,7 @@
             idError.style.display = 'none';
         }
     });
-
+*/
     nombre.addEventListener('input', function () {
         const regex = /^[A-Za-záéíóúÁÉÍÓÚñÑ\s]+$/;
         if (!regex.test(nombre.value)) {
@@ -355,7 +342,7 @@
             nombreError.style.display = 'none';
         }
     });
-    document.getElementById('ID_Empresa').addEventListener('input', function () {
+ /*   document.getElementById('ID_Empresa').addEventListener('input', function () {
         const idError = document.getElementById('idError');
         const regex = /^[A-Z]{3}[0-9]{3}$/;
 
@@ -365,7 +352,7 @@
         } else {
             idError.style.display = 'none';
         }
-    });
+    });*/
     document.getElementById('Direccion').addEventListener('input', function () {
         const direccionError = document.getElementById('direccionError');
         const regex = /^[A-Za-z0-9áéíóúÁÉÍÓÚñÑ\s]*$/;
@@ -468,9 +455,8 @@ if (isNaN(value) || value < 0 || value > 100) {
 
 
         // Actualizar el formulario
-        document.getElementById('ID_Empresa').value = id; //no se puede editar
-        document.getElementById('ID_Empresa').readOnly = true; // hacer el campo de ID_Empresa de solo lectura
-        document.getElementById('ID_Empresa').style.backgroundColor = '#e9ecef'; // Cambiar el color de fondo
+      
+       
         document.getElementById('Nombre').value = nombre;
         document.getElementById('Direccion').value = direccion;
         document.getElementById('Nombre_Contacto').value = nombreContacto;
