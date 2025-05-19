@@ -73,7 +73,7 @@ public function rubro()
 }
 public function cupones()
 {
-    return $this->hasMany(Cupones::class);
+   return $this->hasMany(CuponesModel::class, 'ID_Empresa', 'ID_Empresa');
 }
 public function routeNotificationForMail()
 {

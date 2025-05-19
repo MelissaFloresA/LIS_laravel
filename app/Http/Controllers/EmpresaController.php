@@ -11,7 +11,7 @@ use App\Notifications\EnviarCredencialesEmpresa;
 use App\Models\RepresentantesModel;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Hash;
-
+use App\Models\CuponesModel;
 
 
 
@@ -169,14 +169,36 @@ DB::insert("INSERT INTO representantes
 
 public function destroy($id)
 {
-    $empresa = EmpresaModel::findOrFail($id);
-
-    // Asegúrate que el ID sea exactamente igual
-    RepresentantesModel::where('ID_Empresa', $id)->delete();
-
-    $empresa->delete();
-
-    return redirect()->route('empresa.index')->with('success', 'Empresa y sus representantes eliminados.');
+    try {
+        $empresa = EmpresaModel::findOrFail($id);
+        
+        // Verificar si hay cupones relacionados usando el modelo correcto
+        $cuponesRelacionados = $empresa->cupones()->count();
+        
+        if ($cuponesRelacionados > 0) {
+            return redirect()->route('empresa.index')
+                ->with('error', 'No se puede eliminar la empresa porque tiene cupones asociados.');
+        }
+        
+        DB::beginTransaction();
+        
+        // Eliminar representantes
+        RepresentantesModel::where('ID_Empresa', $id)->delete();
+        
+        // Eliminar la empresa
+        $empresa->delete();
+        
+        DB::commit();
+        
+        return redirect()->route('empresa.index')
+            ->with('success', 'Empresa y sus representantes eliminados correctamente.');
+            
+    } catch (\Exception $e) {
+        DB::rollBack();
+        \Log::error("Error al eliminar empresa: " . $e->getMessage());
+        return redirect()->route('empresa.index')
+            ->with('error', 'Error al eliminar la empresa: ' . $e->getMessage());
+    }
 }
 
    
