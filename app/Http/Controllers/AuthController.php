@@ -29,19 +29,20 @@ class AuthController extends Controller
                 'Contrasena' => 'required|string',
             ]);
 
-            $cliente = EmpleadosModel::where('Correo', $validated['Correo'])->first();
+            $empleado = EmpleadosModel::where('Correo', $validated['Correo'])->first();
 
-            if (!$cliente || !Hash::check($validated['Contrasena'], $cliente->Contrasena)) {
+            if (!$empleado || !Hash::check($validated['Contrasena'], $empleado->Contrasena)) {
                 return redirect()->route('auth.login')->with('error', 'Correo o contraseña incorrectos')->withInput();
             } else {
                 session([
-                    'ID_Empresa' => $cliente->ID_Empresa,
-                    'ID_Rol' => $cliente->ID_Rol,
+                    'ID_Empleado' => $empleado->ID_Empleado,
+                    'ID_Empresa' => $empleado->ID_Empresa,
+                    'ID_Rol' => $empleado->ID_Rol,
                 ]);
 
-                if ($cliente->ID_Empresa == 'CUPON') {
+                if ($empleado->ID_Empresa == 'CUPON') {
                     return redirect()->route('empresas.index');
-                } else if ($cliente->ID_Rol == 1) {
+                } else if ($empleado->ID_Rol == 1) {
                     return redirect()->route('cupones.index');
                 } else {
                     return redirect()->route('cupones.canjear');

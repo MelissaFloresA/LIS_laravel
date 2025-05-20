@@ -182,6 +182,19 @@ class CuponesController extends Controller
                 'Codigo_Cupon' => 'required|string',
             ]);
 
+            if (!DB::table('ventas')->where('Codigo_Cupon', $validated['Codigo_Cupon'])->exists()) {
+                return redirect()->route('cupones.canjear')->with('error', 'Cupon no encontrado');
+            }
+            if (!DB::table('ventas')
+                ->join('cupones', 'ventas.ID_Cupon', '=', 'cupones.ID_Cupon')
+                ->where('Codigo_Cupon', $validated['Codigo_Cupon'])
+                ->where('Estado_Aprobacion', 'Activa')
+                ->where('Estado_Cupon', 'Disponible')
+                ->where('Veces_Canje', '<', DB::raw('Cantidad'))
+                ->exists()) {
+                return redirect()->route('cupones.canjear')->with('error', 'Cupon no disponible para canjear');
+            }
+
             try {
                 DB::table('ventas')
                     ->where('Codigo_Cupon', $validated['Codigo_Cupon'])

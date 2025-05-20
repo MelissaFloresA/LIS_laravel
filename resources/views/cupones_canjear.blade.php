@@ -40,22 +40,20 @@
                     <p><strong>Veces Canjeadas:</strong> {{ $cupon->Veces_Canje }}</p>
 
                     {{-- Botones --}}
-                    @if ($cupon->Estado_Cupon == 'Disponible' && $cupon->Veces_Canje < $cupon->Cantidad)
-                        <form method="POST" action="{{ route('cupones.canjear', $cupon->Codigo_Cupon) }}">
-                            @csrf
+
+                    <form method="POST" action="{{ route('cupones.canjear', $cupon->Codigo_Cupon) }}">
+                        @csrf
+                        
+                        @if ($cupon->Estado_Cupon == 'Disponible' && $cupon->Veces_Canje < $cupon->Cantidad)
                             <input type="hidden" name="Codigo_Cupon" value="{{ $cupon->Codigo_Cupon }}">
                             <button type="submit" class="btn btn-success">Canjear</button>
-                            <a href="{{ route('cupones.canjear') }}" class="btn btn-secondary">Buscar otro</a>
-                        </form>
-                    @endif
+                        @endif
+
+                        <a href="{{ route('cupones.canjear') }}" class="btn btn-secondary">Buscar otro</a>
+                    </form>
                 </div>
             </div>
         @endisset
-
-        {{-- Mostrar mensaje si no se encuentra --}}
-        @if (session('error'))
-            <div class="alert alert-danger mt-3">{{ session('error') }}</div>
-        @endif
 
         @include('partials.toast')
     </div>

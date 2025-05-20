@@ -129,7 +129,10 @@ class EmpleadosController extends Controller
     }
 
     public function destroy($id)
-    {
+    {   
+        if(session(('ID_Empleado')) == $id){
+            return redirect()->route('empleados.index')->with('error', 'No puedes desactivar tu propio perfil.');
+        }
         $empleado = EmpleadosModel::findOrFail($id);
         $empleado->Estado = 0; 
         $empleado->save();
