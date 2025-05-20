@@ -12,166 +12,184 @@ use Carbon\Carbon;
 class CuponesController extends Controller
 {
     //funcion que manda a vista la lista de cupones PENDIENTES
-    public function pendientes()
+    public function index(Request $request)
     {
-        $cupones = CuponesModel::pendientes()
+        $estado = $request->query('estado', 'pendiente');
+        $cupones = CuponesModel::where('cupones.ID_Empresa', session('ID_Empresa'))
+            ->where('Estado_Aprobacion', $estado)
             ->join('empresa', 'cupones.ID_Empresa', '=', 'empresa.ID_Empresa')
             ->select('cupones.*', 'empresa.Nombre as nombre_empresa')
             ->get();
 
-        return view('cupones', [
-            'titulo' => 'Cupones Pendientes',
-            'cupones' => $cupones
-        ]);
+        $empresa = session('ID_Empresa');
+        $nombre_empresa = EmpresaModel::where('ID_Empresa', session('ID_Empresa'))->value('Nombre');
+
+        return view('cupones', compact('cupones', 'estado', 'nombre_empresa', 'empresa'));
     }
 
-    public function editarestado($id)
+    public function indexEmpresa($empresa, Request $request)
     {
-        $cupon = CuponesModel::findOrFail($id);
-        return view('cupones', [
-            'titulo' => 'Editar Estado', //mismo div pero otro contenido por eso otro tilulo
-            'cupon' => $cupon,
-            'mostrarFormulario' => true //para aprobar o no con justificacion
-        ]);
-    }
+        //Middleware de ruta compartida
+        if (strtoupper($empresa) == 'CUPON') {
+            return redirect()->route('empresas.index');
+        }
 
-    public function actualizarestado(Request $request, $id)
-    {
-        $request->validate([
-            'Estado_Aprobacion' => 'required|in:Activa,Rechazado', // Cambiado a Activo en lugar de Aprobado
-            'Justificacion' => 'required_if:Estado_Aprobacion,Rechazado'
-        ]);
+        $nombre_empresa = EmpresaModel::where('ID_Empresa', $empresa)->value('Nombre');
 
-        $cupon = CuponesModel::findOrFail($id);
-        $data = [
-            'Estado_Aprobacion' => $request->Estado_Aprobacion,
-            'Justificacion' => $request->Estado_Aprobacion == 'Rechazado' ? $request->Justificacion : null,
-            'Estado_Cupon' => $request->Estado_Aprobacion == 'Activa' ? 'Disponible' : 'No disponible'
-        ];
-
-        $cupon->update($data);
-        return redirect()->route('cupones.pendientes')
-            ->with('success', 'Estado actualizado correctamente');
-    }
-   /*public function filtrarPorEmpresa(Request $request)
-{
-     $empresas = EmpresaModel::all();
-    $cupones = [];
-
-    if ($request->has('empresa_id') && $request->filled('empresa_id')) {
-        $cupones = DB::table('cupones as c')
-            ->join('empresa as e', 'c.ID_Empresa', '=', 'e.ID_Empresa')
-            ->select('e.Nombre', 'c.Imagen', 'c.Titulo', 'c.PrecioR', 'c.PrecioO', 'c.Cantidad_Vendidos', 'c.Estado_Aprobacion', 'c.ESTADO_CUPON', 'e.Porcentaje_Comision')
-            ->where('c.ID_Empresa', $request->empresa_id)
+        $estado = $request->query('estado', 'pendiente');
+        $cupones = CuponesModel::where('cupones.ID_Empresa', $empresa)
+            ->where('Estado_Aprobacion', $estado)
+            ->join('empresa', 'cupones.ID_Empresa', '=', 'empresa.ID_Empresa')
+            ->select('cupones.*', 'empresa.Nombre as nombre_empresa')
             ->get();
+
+        return view('cupones', compact('cupones', 'estado', 'nombre_empresa', 'empresa'));
     }
 
-    return view('empresa_cupones', compact( 'empresas','cupones'));
+    public function create(Request $request)
+    {
+        if ($request->isMethod('post')) {
+            $validated = $request->validate([
+                'Titulo' => 'required|string|max:255',
+                'Imagen' => 'nullable|string',
+                'PrecioR' => [
+                    'required',
+                    'numeric',
+                    'min:0',
+                    'regex:/^\d+(\.\d{1,2})?$/'
+                ],
+                'PrecioO' => [
+                    'required',
+                    'numeric',
+                    'min:0',
+                    'regex:/^\d+(\.\d{1,2})?$/',
+                    'lte:PrecioR'
+                ],
+                'Fecha_Inicial' => 'required|date',
+                'Fecha_Final' => 'required|date|after_or_equal:Fecha_Inicial',
+                'Fecha_Limite' => 'required|date|after_or_equal:Fecha_Final',
+                'Descripcion' => 'required|string',
+                'Stock' => 'required|integer|min:1',
+            ], [
+                'PrecioR.regex' => 'El precio regular debe tener hasta 2 decimales (ej. 10.50)',
+                'PrecioO.regex' => 'El precio de oferta debe tener hasta 2 decimales (ej. 8.75)',
+                'PrecioO.lte' => 'El precio de oferta no puede ser mayor que el precio regular',
+            ]);
+
+            $validated['ID_Empresa'] = session('ID_Empresa');
+
+            $cupon = new CuponesModel($validated);
+            $cupon->Estado_Aprobacion = 'Pendiente';
+            $cupon->Estado_Cupon = 'No disponible';
+            $cupon->Justificacion = '';
+            $cupon->Cantidad_Vendidos = 0;
+            $cupon->save();
+
+            return redirect()->route('cupones.index')->with('success', 'Cupón agregado exitosamente.');
+        }
+
+        return view('cupones_form');
+    }
+
+    public function update(Request $request, $id)
+    {
+        if ($request->isMethod('put')) {
+            $validated = $request->validate([
+                'Titulo' => 'required|string|max:255',
+                'Imagen' => 'nullable|string',
+                'PrecioR' => [
+                    'required',
+                    'numeric',
+                    'min:0',
+                    'regex:/^\d+(\.\d{1,2})?$/'
+                ],
+                'PrecioO' => [
+                    'required',
+                    'numeric',
+                    'min:0',
+                    'regex:/^\d+(\.\d{1,2})?$/',
+                    'lte:PrecioR'
+                ],
+                'Fecha_Inicial' => 'required|date',
+                'Fecha_Final' => 'required|date|after_or_equal:Fecha_Inicial',
+                'Fecha_Limite' => 'required|date|after_or_equal:Fecha_Final',
+                'Descripcion' => 'required|string',
+                'Stock' => 'required|integer|min:1',
+            ], [
+                'PrecioR.regex' => 'El precio regular debe tener hasta 2 decimales (ej. 10.50)',
+                'PrecioO.regex' => 'El precio de oferta debe tener hasta 2 decimales (ej. 8.75)',
+                'PrecioO.lte' => 'El precio de oferta no puede ser mayor que el precio regular',
+            ]);
+
+            $cupon = CuponesModel::findOrFail($id);
+            $validated['Estado_Aprobacion'] = 'Pendiente';
+            $cupon->update($validated);
+
+            return redirect()->route('cupones.index')->with('success', 'Cupón actualizado exitosamente.');
+        }
+
+        $cupon = CuponesModel::findOrFail($id);
+        return view('cupones_form', compact('cupon'));
+    }
+
+    public function aprobar(Request $request, $id)
+    {
+        if ($request->isMethod('get')) {
+            $cupon = CuponesModel::findOrFail($id);
+            return view('cupones_aprobar', compact('cupon'));
+        } else if ($request->isMethod('put')) {
+            $request->validate([
+                'Estado_Aprobacion' => 'required|in:Activa,Rechazada',
+                'Justificacion' => 'required_if:Estado_Aprobacion,Rechazada'
+            ]);
+
+            $cupon = CuponesModel::findOrFail($id);
+            $data = [
+                'Estado_Aprobacion' => $request->Estado_Aprobacion,
+                'Justificacion' => $request->Estado_Aprobacion == 'Rechazada' ? $request->Justificacion : null,
+                'Estado_Cupon' => $request->Estado_Aprobacion == 'Activa' ? 'Disponible' : 'No disponible'
+            ];
+
+            $cupon->update($data);
+            return redirect()->route('empresa.cupones.index', $cupon->ID_Empresa)
+                ->with('success', 'Estado actualizado correctamente');
+        }
+    }
+
+    public function destroy($id)
+    {
+        $cupon = CuponesModel::findOrFail($id);
+        $cupon->Estado_Aprobacion = 'descartada';
+        $cupon->save();
+        return redirect()->route('cupones.index')->with('success', 'Cupón eliminado exitosamente.');
+    }
+
+    public function canjear(Request $request, $id = null)
+    {
+        if ($request->isMethod('get')) {
+            if ($id) {
+                $cupon = DB::table('ventas')
+                    ->join('cupones', 'ventas.ID_Cupon', '=', 'cupones.ID_Cupon')
+                    ->join('cliente', 'ventas.ID_Cliente', '=', 'cliente.ID_Cliente')
+                    ->where('Codigo_Cupon', $id)
+                    ->select('cupones.*', 'ventas.*', 'cliente.*')
+                    ->first();
+                return view('cupones_canjear', compact('cupon'));
+            }
+            return view('cupones_canjear');
+        } else if ($request->isMethod('post')) {
+            $validated = $request->validate([
+                'Codigo_Cupon' => 'required|string',
+            ]);
+
+            try {
+                DB::table('ventas')
+                    ->where('Codigo_Cupon', $validated['Codigo_Cupon'])
+                    ->increment('Veces_Canje');
+            } catch (\Exception $e) {
+                return redirect()->route('cupones.canjear')->with('error', 'Cupon no encontrado');
+            }
+            return redirect()->route('cupones.canjear')->with('success', 'Cupon canjeado exitosamente');
+        }
+    }
 }
-public function filtroEmpresa()
-{
-    $empresas = EmpresaModel::all(); // obtiene todas las empresas
-    return view('empresa_cupones', compact('empresas'));  // PASA $empresas a la vista
-}*/
-
-
-public function filtrarPorEmpresa(Request $request)
-{
-    $empresaId = $request->input('empresa_id');
-    $hoy = Carbon::today()->toDateString();
-     
-
-
-
-      if (!$empresaId) {
-    return view('empresa_cupones', [
-        'empresas' => EmpresaModel::all(),
-        'cuponesEnEspera' => [],
-        'cuponesAprobadosFuturos' => [],
-        'cuponesActivos' => [],
-        'cuponesPasados' => [],
-        'cuponesRechazados' => [],
-        'cuponesDescartados' => [],
-        'empresaId' => null, // 
-    ]);
-}
-    // Cupones en espera (Estado_Aprobacion = 'En espera')
-    $cuponesEnEspera = DB::table('cupones as c')
-        ->join('empresa as e', 'c.ID_Empresa', '=', 'e.ID_Empresa')
-        ->select('c.*', 'e.Nombre', 'e.Porcentaje_Comision', 'c.Fecha_Inicial', 'c.Fecha_Final')
-        ->where('c.ID_Empresa', $empresaId)
-        ->where('c.Estado_Aprobacion', 'En espera')
-        ->get();
-
-    // Cupones aprobados futuros (aprobados pero con fecha inicio > hoy)
-    $cuponesAprobadosFuturos = DB::table('cupones as c')
-        ->join('empresa as e', 'c.ID_Empresa', '=', 'e.ID_Empresa')
-        ->select('c.*', 'e.Nombre', 'e.Porcentaje_Comision', 'c.Fecha_Inicial', 'c.Fecha_Final')
-        ->where('c.ID_Empresa', $empresaId)
-        ->where('c.Estado_Aprobacion', 'Activa')
-        ->whereDate('c.Fecha_Inicial', '>', $hoy)
-        ->get();
-
-    // Cupones activos (aprobados y dentro del rango de fecha)
-    $cuponesActivos = DB::table('cupones as c')
-        ->join('empresa as e', 'c.ID_Empresa', '=', 'e.ID_Empresa')
-        ->select('c.*', 'e.Nombre', 'e.Porcentaje_Comision', 'c.Fecha_Inicial', 'c.Fecha_Final')
-        ->where('c.ID_Empresa', $empresaId)
-        ->where('c.Estado_Aprobacion', 'Activa')
-        ->whereDate('c.Fecha_Inicial', '<=', $hoy)
-        ->whereDate('c.Fecha_Final', '>=', $hoy)
-        ->get();
-
-    // Cupones pasados (aprobados pero con fecha fin < hoy)
-    $cuponesPasados = DB::table('cupones as c')
-        ->join('empresa as e', 'c.ID_Empresa', '=', 'e.ID_Empresa')
-        ->select('c.*', 'e.Nombre', 'e.Porcentaje_Comision', 'c.Fecha_Inicial', 'c.Fecha_Final')
-        ->where('c.ID_Empresa', $empresaId)
-        ->where('c.Estado_Aprobacion', 'Activa')
-        ->whereDate('c.Fecha_Final', '<', $hoy)
-        ->get();
-
-    // Cupones rechazados
-    $cuponesRechazados = DB::table('cupones as c')
-        ->join('empresa as e', 'c.ID_Empresa', '=', 'e.ID_Empresa')
-        ->select('c.*', 'e.Nombre', 'e.Porcentaje_Comision')
-        ->where('c.ID_Empresa', $empresaId)
-        ->where('c.Estado_Aprobacion', 'Rechazado')
-        ->get();
-
-    // Cupones descartados (si tienes otro estado para descartados, p.ej. 'Descartado')
-    $cuponesDescartados = DB::table('cupones as c')
-        ->join('empresa as e', 'c.ID_Empresa', '=', 'e.ID_Empresa')
-        ->select('c.*', 'e.Nombre', 'e.Porcentaje_Comision')
-        ->where('c.ID_Empresa', $empresaId)
-        ->where('c.Estado_Aprobacion', 'Descartado') // Cambia si usas otro valor
-        ->get();
-
-    $empresas = EmpresaModel::all();
-    $cuponesPorCategoria = [
-    'activa' => $cuponesActivos,
-    'espera' => $cuponesEnEspera,
-    'aprobadas_futuras' => $cuponesAprobadosFuturos,
-    'pasadas' => $cuponesPasados,
-    'rechazadas' => $cuponesRechazados,
-    'descartadas' => $cuponesDescartados,
-];
-
-    return view('empresa_cupones', compact(
-        'empresaId',
-        'empresas',
-        'cuponesEnEspera',
-        'cuponesAprobadosFuturos',
-        'cuponesActivos',
-        'cuponesPasados',
-        'cuponesRechazados',
-        'cuponesDescartados',
-        'cuponesPorCategoria' 
-    ));
-}
-
-
-
-
-
-}//fin de clase CuponesController

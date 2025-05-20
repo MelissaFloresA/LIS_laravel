@@ -8,7 +8,7 @@ class CuponesModel extends Model
 {
     protected $table = 'cupones';
     protected $primaryKey = 'ID_Cupon';
-     public $timestamps = false; // Esto desactiva los campos created_at y updated_at
+    public $timestamps = false; // Esto desactiva los campos created_at y updated_at
 
     protected $fillable = [
         'ID_Empresa',
@@ -19,7 +19,7 @@ class CuponesModel extends Model
         'Fecha_Inicial',
         'Fecha_Final',
         'Fecha_Limite',
-        'Description',
+        'Descripcion',
         'Stock',
         'Cantidad_Vendidos',
         'Estado_Aprobacion',
@@ -45,8 +45,4 @@ class CuponesModel extends Model
     {
         return $query->where('Estado_Aprobacion', 'En espera');
     }
-
-    //------------------------------------------------------------------//
-
-
-}//fin clase CuponesModel
+}

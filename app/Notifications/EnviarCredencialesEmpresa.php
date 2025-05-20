@@ -24,14 +24,14 @@ class EnviarCredencialesEmpresa extends Notification
     public function toMail($notifiable)
     {
         // url para verificar cuenta de representante de empresa
-          $linkVerificacion = url('/verificar-cuenta/' . $notifiable->ID_Representante);
-       
-          return (new MailMessage)
+        $linkVerificacion = url('/verificar-cuenta/' . $notifiable->ID_Representante);
+
+        return (new MailMessage)
             ->subject('Empresa registrada')
             ->greeting('Hola ' . $notifiable->Nombre)
             ->line('Su cuenta ha sido creada exitosamente.')
             ->line('Contraseña generada: ' . $this->password)
-             ->action('Verificar cuenta', $linkVerificacion)
+            ->action('Verificar cuenta', $linkVerificacion)
             ->salutation('Saludos, Equipo de La Cuponera');
     }
 }

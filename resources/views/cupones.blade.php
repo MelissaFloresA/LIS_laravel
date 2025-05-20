@@ -1,118 +1,142 @@
-@include('partials.navbar')
-<link href="{{ asset('css/cupones_pendientes.css') }}" rel="stylesheet">
-<!-- Toast de Mensajes Simplificado -->
-<div class="position-fixed top-0 end-0 p-3" style="z-index: 9999">
-    <div id="statusToast" class="toast align-items-center text-bg-success border-0" role="alert" aria-live="assertive" aria-atomic="true">
-        <div class="d-flex">
-            <div class="toast-body" id="toastMessage"></div>
-            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
-        </div>
-    </div>
-</div>
+@include('partials.headers')
 
-<div class="container">
-    <br>
-    <h1>{{ $titulo }}</h1>
-    <br>
+<body>
+    @include('partials.navbar')
 
-    @if(isset($mostrarFormulario) && $mostrarFormulario)
-        <!-- Formulario de edición -->
-        <div class="card mb-4">
-            <div class="card-body">
-                <h5 class="card-title">{{ $cupon->Titulo }}</h5>
-                <p class="card-text">{{ $cupon->Descripcion }}</p>
-                <p><strong>Precio Regular:</strong> ${{ number_format($cupon->PrecioR, 2) }}</p>
-                <p><strong>Precio Oferta:</strong> ${{ number_format($cupon->PrecioO, 2) }}</p>
+    <div class="container pt-4">
+        <div class="row align-items-center">
+            <div class="col-8">
+                <h1>Cupones de {{ $nombre_empresa . ' - ' . $empresa }}</h1>
             </div>
-        </div>
-
-        <form method="POST" action="{{ route('cupones.actualizarestado', $cupon->ID_Cupon) }}" id="formEditarCupon">
-            @csrf
-            @method('PUT')
-
-            <div class="form-group mb-3">
-                <label for="Estado_Aprobacion" class="form-label">Estado *</label>
-                <select class="form-select" id="Estado_Aprobacion" name="Estado_Aprobacion" required>
-                    <option value="">Seleccione un estado</option>
-                    <option value="Activa" {{ old('Estado_Aprobacion', $cupon->Estado_Aprobacion) == 'Activa' ? 'selected' : '' }}>Aprobar</option>
-                    <option value="Rechazado" {{ old('Estado_Aprobacion', $cupon->Estado_Aprobacion) == 'Rechazado' ? 'selected' : '' }}>Rechazar</option>
+            <div class="col-4 d-flex gap-2">
+                <select class="form-select" name="estado" id="estado" onchange="actualizarEstado(this.value)">
+                    <option value="pendiente" {{ $estado == 'pendiente' ? 'selected' : '' }}>Pendientes</option>
+                    <option value="futura" {{ $estado == 'futura' ? 'selected' : '' }}>Futuras</option>
+                    <option value="activa" {{ $estado == 'activa' ? 'selected' : '' }}>Activas</option>
+                    <option value="pasada" {{ $estado == 'pasada' ? 'selected' : '' }}>Pasadas</option>
+                    <option value="rechazada" {{ $estado == 'rechazada' ? 'selected' : '' }}>Rechazadas</option>
+                    <option value="descartada" {{ $estado == 'descartada' ? 'selected' : '' }}>Descartadas</option>
                 </select>
-                @if($errors->has('Estado_Aprobacion'))
-                    <div class="text-danger">{{ $errors->first('Estado_Aprobacion') }}</div>
+
+                <script>
+                    function actualizarEstado(estado) {
+                        const url = new URL(window.location);
+                        url.searchParams.set('estado', estado);
+                        window.location.href = url;
+                    }
+                </script>
+
+                @if (session('ID_Empresa') != 'CUPON')
+                    <a href="{{ route('cupones.create', session('ID_Empresa')) }}"
+                        class="btn btn-primary text-nowrap">Agregar Cupon</a>
                 @endif
             </div>
-
-            <div class="form-group mb-3" id="justificacion-group" style="display: {{ old('Estado_Aprobacion') == 'Rechazado' ? 'block' : 'none' }};">
-                <label for="Justificacion" class="form-label">Justificación *</label>
-                <textarea class="form-control" id="Justificacion" name="Justificacion" rows="3">{{ old('Justificacion', $cupon->Justificacion) }}</textarea>
-                @if($errors->has('Justificacion'))
-                    <div class="text-danger">{{ $errors->first('Justificacion') }}</div>
-                @endif
-            </div>
-
-            <button type="submit" class="btn btn-primary">Guardar Cambios</button>
-            <a href="{{ route('cupones.pendientes') }}" class="btn btn-secondary">Cancelar</a>
-        </form>
-
-        <script>
-            document.getElementById('Estado_Aprobacion').addEventListener('change', function() {
-                const justificacionGroup = document.getElementById('justificacion-group');
-                justificacionGroup.style.display = this.value === 'Rechazado' ? 'block' : 'none';
-                document.getElementById('Justificacion').required = this.value === 'Rechazado';
-            });
-        </script>
-    @else
+        </div>
         <!-- Lista de cupones pendientes -->
-        @if($cupones->isEmpty())
-            <div class="alert alert-info">
-                No hay cupones pendientes de aprobación.
+        @if ($cupones->isEmpty())
+            <div class="alert alert-info my-4">
+                No hay ofertas {{ $estado }}s.
             </div>
         @else
-            <div class="table-responsive text-white">
+            <div class="table-responsive text-white my-4">
                 <table class="table table-striped">
                     <thead class="table-dark">
                         <tr>
-                            <th>Empresa</th>
                             <th>Título</th>
-                            <th>Precio Oferta</th>
-                            <th>Fecha Inicial</th>
-                            <th>Acciones</th>
+                            <th>Vendidos</th>
+                            <th>Disponibles</th>
+                            <th>Ingresos</th>
+                            <th>Comisión</th>
+
+                            @if ($estado == 'rechazada')
+                                <th>Justificacion</th>
+                            @endif
+                            @if (
+                                ($estado == 'pendiente' && session('ID_Empresa') == 'CUPON') ||
+                                    ($estado == 'rechazada' && session('ID_Empresa') != 'CUPON'))
+                                <th>Acciones</th>
+                            @endif
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach($cupones as $cupon)
-                        <tr>
-                            <td>{{ $cupon->nombre_empresa }}</td>
-                            <td>{{ $cupon->Titulo }}</td>
-                            <td>${{ number_format($cupon->PrecioO, 2) }}</td>
-                            <td>{{ date('d/m/Y', strtotime($cupon->Fecha_Inicial)) }}</td>
-                            <td>
-                                <a href="{{ route('cupones.editarestado', $cupon->ID_Cupon) }}" class="btn btn-sm btn-warning">
-                                    <i class="fas fa-edit"></i> Revisar
-                                </a>
-                            </td>
-                        </tr>
+                        @foreach ($cupones as $cupon)
+                            <tr>
+                                <td>{{ $cupon->Titulo }}</td>
+                                <td>{{ $cupon->Cantidad_Vendidos }}</td>
+                                <td>{{ $cupon->Stock }}</td>
+                                <td>${{ number_format($cupon->Cantidad_Vendidos * $cupon->PrecioO, 2) }}</td>
+                                <td>${{ number_format($cupon->Cantidad_Vendidos * $cupon->PrecioO * $cupon->Porcentaje_Comision / 100, 2) }}</td>
+                                
+                                @if ($estado == 'rechazada')
+                                    <td>{{ $cupon->Justificacion }}</td>
+                                @endif
+
+                                @if (session('ID_Empresa') == 'CUPON' && $estado == 'pendiente')
+                                    <td>
+                                        <a href="{{ route('cupones.aprobar', $cupon->ID_Cupon) }}"
+                                            class="btn btn-sm btn-warning">
+                                            <i class="fas fa-edit"></i> Revisar
+                                        </a>
+                                    </td>
+                                @endif
+
+                                @if ($estado == 'rechazada' && session('ID_Empresa') == $cupon->ID_Empresa)
+                                    <td>
+                                        <a href="{{ route('cupones.update', [$cupon->ID_Empresa, $cupon->ID_Cupon]) }}"
+                                            class="btn btn-sm btn-primary">
+                                            <i class="fas fa-edit"></i> Editar
+                                        </a>
+
+                                        <button class="btn btn-sm btn-danger"
+                                            onclick="confirmarEliminacion('{{ $cupon->ID_Cupon }}')">
+                                            <i class="fas fa-trash"></i> Descartar
+                                        </button>
+                                    </td>
+                                @endif
+                            </tr>
                         @endforeach
                     </tbody>
                 </table>
             </div>
         @endif
-    @endif
-</div>
+    </div>
 
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const toastEl = document.getElementById('statusToast');
-        const toastMessage = document.getElementById('toastMessage');
-        const toast = new bootstrap.Toast(toastEl, {
-            autohide: true,
-            delay: 5000
-        });
-        
-        @if(session('success'))
-            toastMessage.textContent = "Estado actualizado correctamente";
-            toast.show();
-        @endif
-    });
-</script>
+    <div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-labelledby="confirmDeleteModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="confirmDeleteModalLabel">Confirmar Eliminación</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    ¿Estás seguro de que deseas descartar esta oferta? Esta acción no se puede deshacer.
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <form id="deleteForm" method="POST">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit" class="btn btn-danger">Descartar</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
 
+    <script>
+        function confirmarEliminacion(id) {
+
+            const deleteForm = document.getElementById('deleteForm');
+            deleteForm.action = `/cupones/descartar/${id}`;
+
+            // Mostrar modal (usando Bootstrap 5)
+            const modal = new bootstrap.Modal(document.getElementById('confirmDeleteModal'));
+            modal.show();
+        }
+    </script>
+
+    @include('partials.toast')
+</body>
+
+</html>

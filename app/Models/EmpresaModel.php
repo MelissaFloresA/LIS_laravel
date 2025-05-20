@@ -8,81 +8,77 @@ use Illuminate\Notifications\Notifiable;
 class EmpresaModel extends Model
 {
     use Notifiable;
-     protected $table = 'empresa';
+    protected $table = 'empresa';
     protected $primaryKey = 'ID_Empresa';
-     public $timestamps = false;
-     protected $keyType = 'string';
-       public $incrementing = true;
+    public $timestamps = false;
+    protected $keyType = 'string';
+    public $incrementing = true;
 
-     protected $fillable = [
-         'ID_Empresa',
-       'Nombre',
-       'Direccion',
-       'Nombre_Contacto',
-       'Telefono',
-       'Correo',
-       'ID_Rubro',
-       'Porcentaje_Comision'
-     ];
+    protected $fillable = [
+        'ID_Empresa',
+        'Nombre',
+        'Direccion',
+        'Nombre_Contacto',
+        'Telefono',
+        'Correo',
+        'ID_Rubro',
+        'Porcentaje_Comision'
+    ];
 
-     //validacion de los campos
+    //validacion de los campos
 
-     public static function validacion($id = null)
-     {
-         return [
-                'ID_Empresa' => [
-                   
-                ],
-             'Nombre' => [
-                 'required',
-                 'string',
-                 'max:100',
-                 'regex:/^[\pL\s]+$/u', 
-                
-             ],
-             'Direccion' => [
-                 'required',
-                 'string',
-                 'max:100',
-             ],
-             'Nombre_Contacto' => [
-                 'required',
-                 'string',
-                 'max:100',
-             ],
-             'Telefono' => [
-                 'required',
-                 'string',
-                 'max:15',
-             ],
-             'Correo' => [
-                 'required',
-                 'email',
-             ],
-             'ID_Rubro' => [
-                 'required'
-             ],
-             'Porcentaje_Comision' => [
-                 'required'
-             ]
-         ];
-     }
-public function rubro()
-{
-    return $this->belongsTo(RubrosModel::class, 'ID_Rubro', 'ID_Rubro');
-}
-public function cupones()
-{
-    return $this->hasMany(Cupones::class);
-}
-public function routeNotificationForMail()
-{
-    return $this->Correo;
-}
-public function representantes()
-{
-    return $this->hasMany(RepresentantesModel::class, 'ID_Empresa', 'ID_Empresa');
-}
+    public static function validacion($id = null)
+    {
+        return [
+            'ID_Empresa' => [],
+            'Nombre' => [
+                'required',
+                'string',
+                'max:100',
+                'regex:/^[\pL\s]+$/u',
 
-
+            ],
+            'Direccion' => [
+                'required',
+                'string',
+                'max:100',
+            ],
+            'Nombre_Contacto' => [
+                'required',
+                'string',
+                'max:100',
+            ],
+            'Telefono' => [
+                'required',
+                'string',
+                'max:15',
+            ],
+            'Correo' => [
+                'required',
+                'email',
+            ],
+            'ID_Rubro' => [
+                'required'
+            ],
+            'Porcentaje_Comision' => [
+                'required'
+            ]
+        ];
+    }
+    public function rubro()
+    {
+        return $this->belongsTo(RubrosModel::class, 'ID_Rubro', 'ID_Rubro');
+    }
+    public function cupones()
+    {
+        return $this->hasMany(CuponesModel::class);
+    }
+    public function routeNotificationForMail()
+    {
+        return $this->Correo;
+    }
+    public function empleados()
+    {
+        return $this->hasMany(EmpleadosModel::class, 'ID_Empresa', 'ID_Empresa');
+    }
 }
