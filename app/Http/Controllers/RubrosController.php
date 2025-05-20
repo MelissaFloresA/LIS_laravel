@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\RubrosModel;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use App\Models\EmpresaModel;
 
 
 class RubrosController extends Controller
@@ -56,13 +57,25 @@ class RubrosController extends Controller
     //Eliminar
     public function destroy($id)
     {
-        if ($id == 1) {
-            return redirect()->route('rubros.index');
+        try {
+            $rubro = RubrosModel::findOrFail($id);
+            
+            // Verificar si hay empresas relacionadas
+            $empresasRelacionadas = EmpresaModel::where('ID_Rubro', $id)->count();
+            
+            if ($empresasRelacionadas > 0) {
+                return redirect()->route('rubros.index')
+                    ->with('error', 'No se puede eliminar el rubro porque tiene empresas asociadas.');
+            }
+            
+            $rubro->delete();
+            
+            return redirect()->route('rubros.index')
+                ->with('success', 'Rubro eliminado correctamente.');
+                
+        } catch (\Exception $e) {
+            return redirect()->route('rubros.index')
+                ->with('error', 'Error al eliminar el rubro: ' . $e->getMessage());
         }
-        $rubro = RubrosModel::findOrFail($id);
-        $rubro->delete();
-
-        return redirect()->route('rubros.index')
-            ->with('success', 'Rubro eliminado exitosamente.');
     }
 }
