@@ -32,14 +32,15 @@
                     <p class="card-text">{{ $cupon->Descripcion }}</p>
                     <p><strong>Precio Regular:</strong> ${{ number_format($cupon->PrecioR, 2) }}</p>
                     <p><strong>Precio Oferta:</strong> ${{ number_format($cupon->PrecioO, 2) }}</p>
-                    <p><strong>Estado:</strong> {{ $cupon->Estado_Aprobacion }}</p>
+                    <p><strong>Estado Aprobación:</strong> {{ $cupon->Estado_Aprobacion }}</p>
+                    <p><strong>Estado Cupón:</strong> {{ $cupon->Estado_Cupon }}</p>
                     <p><strong>Fecha de Vencimiento:</strong> {{ $cupon->Fecha_Limite }}</p>
                     <p><strong>DUI:</strong> {{ $cupon->Dui }}</p>
                     <p><strong>Cantidad:</strong> {{ $cupon->Cantidad }}</p>
                     <p><strong>Veces Canjeadas:</strong> {{ $cupon->Veces_Canje }}</p>
 
                     {{-- Botones --}}
-                    @if ($cupon->Estado_Aprobacion == 'Activa' && $cupon->Veces_Canje < $cupon->Cantidad)
+                    @if ($cupon->Estado_Cupon == 'Disponible' && $cupon->Veces_Canje < $cupon->Cantidad)
                         <form method="POST" action="{{ route('cupones.canjear', $cupon->Codigo_Cupon) }}">
                             @csrf
                             <input type="hidden" name="Codigo_Cupon" value="{{ $cupon->Codigo_Cupon }}">
