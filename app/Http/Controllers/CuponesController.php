@@ -108,7 +108,7 @@ public function filtrarPorEmpresa(Request $request)
         ->join('empresa as e', 'c.ID_Empresa', '=', 'e.ID_Empresa')
         ->select('c.*', 'e.Nombre', 'e.Porcentaje_Comision', 'c.Fecha_Inicial', 'c.Fecha_Final')
         ->where('c.ID_Empresa', $empresaId)
-        ->where('c.Estado_Aprobacion', 'Activa')
+        ->where('c.Estado_Aprobacion', 'En espera')
         ->whereDate('c.Fecha_Inicial', '>', $hoy)
         ->get();
 
